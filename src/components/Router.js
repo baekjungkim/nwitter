@@ -6,13 +6,15 @@ import Home from "routes/Home";
 import Profile from "routes/Profile";
 import NoMatch from "routes/NoMatch";
 
-export default ({ isLoggedIn }) => {
+export default ({ isLoggedIn, user }) => {
   return (
     <Router>
       {isLoggedIn && <Navigation />}
       {isLoggedIn ? (
         <Switch>
-          <Route exact path="/" component={Home} />
+          <Route exact path="/">
+            <Home user={user} />
+          </Route>
           <Route path="/profile" component={Profile} />
           <Route path="*" component={NoMatch} />
         </Switch>
