@@ -1,11 +1,13 @@
-import { dbService } from "fbase";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { dbService, storageService } from "fbase";
 import Nweet from "components/Nweet";
 
 const Home = ({ user }) => {
   const [nweet, setNweet] = useState("");
   const [nweets, setNweets] = useState([]);
   const [attachment, setAttachment] = useState();
+  const fileInputRef = useRef(null);
   // Get Nweet Ceollection
   // const getNweets = async () => {
   //   const response = await dbService.collection("nweets").get();
@@ -35,14 +37,23 @@ const Home = ({ user }) => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    // Nweet Collection Add
-    await dbService.collection("nweets").add({
+    let fileUrl = "";
+    if (attachment !== "") {
+      const fileRef = storageService.ref().child(`${user.uid}/${uuidv4()}`);
+      const response = await fileRef.putString(attachment, "data_url");
+      fileUrl = await response.ref.getDownloadURL();
+    }
+    const nweetObj = {
       text: nweet,
       createdAt: Date.now(),
       creatorId: user.uid,
-    });
+      fileUrl,
+    };
+    // Nweet Collection Add
+    await dbService.collection("nweets").add(nweetObj);
 
     setNweet("");
+    setAttachment("");
   };
 
   const onChange = (e) => {
@@ -68,7 +79,10 @@ const Home = ({ user }) => {
     reader.readAsDataURL(theFile);
   };
 
-  const onClearAttachment = () => setAttachment(null);
+  const onClearAttachment = () => {
+    setAttachment(null);
+    fileInputRef.current.value = "";
+  };
 
   return (
     <div>
@@ -80,7 +94,12 @@ const Home = ({ user }) => {
           placeholder="What's on your mind?"
           maxLength={120}
         />
-        <input type="file" onChange={onFileChange} accept="image/*" />
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={onFileChange}
+          accept="image/*"
+        />
         <input type="submit" value="Nweet" />
         {attachment && (
           <div>

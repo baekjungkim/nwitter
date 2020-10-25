@@ -1,4 +1,4 @@
-import { dbService } from "fbase";
+import { dbService, storageService } from "fbase";
 import React, { useState } from "react";
 
 const Nweet = ({ nweet, isOwner }) => {
@@ -9,6 +9,8 @@ const Nweet = ({ nweet, isOwner }) => {
     const ok = window.confirm("Are you sure you want to delete this nweet?");
     if (ok) {
       await dbService.doc(`nweets/${nweet.id}`).delete();
+      // refFromUrl 을 통해서 downloadUrl로 ref를 찾을 수 있다.
+      await storageService.refFromURL(nweet.fileUrl).delete();
     }
   };
 
@@ -47,6 +49,9 @@ const Nweet = ({ nweet, isOwner }) => {
       ) : (
         <>
           <h4>{nweet.text}</h4>
+          {nweet.fileUrl && (
+            <img src={nweet.fileUrl} width="50px" height="50px" />
+          )}
           {isOwner && (
             <>
               <button onClick={onDeleteClick}>Delete Nweet</button>
